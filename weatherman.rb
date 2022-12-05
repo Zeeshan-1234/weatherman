@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 require 'csv'
+require 'colorize'
 
 if ARGV.length < 3
   puts "Too few arguments,\nShould be `ruby weatherman.rb -e 2002 /path/to/filesFolder`"
@@ -9,7 +10,7 @@ end
 $months = ["January","February","March","April","May","June","July",
             "August","September","October","November","December"]
 def first (date, path)
-	puts "-e was called with #{date} and #{path}"
+	# puts "-e was called with #{date} and #{path}"
 
 	temp_max = 0
 	max_day = ""
@@ -55,11 +56,67 @@ def first (date, path)
 end
 
 def second (date, path)
-	puts "-a was called"
+	# puts "-a was called"
+	avg_max = 0
+	avg_min = 100
+	humidity = 0
+
+	year = date.split('/')[0]
+	month = date.split('/')[1].to_i
+
+	date = year + "_#{$months[month-1][..2]}"
+
+	files = Dir["#{path}/*#{date}*.txt"]
+	files.each do |file|
+		table = CSV.parse(File.read(file)[2..], headers: true)
+
+		for i in 0..table.length-2
+			temp = table[i]["Max TemperatureC"]
+			avg_max += temp.to_i
+			
+			temp = table[i]["Min TemperatureC"]
+			avg_min += temp.to_i
+
+			humid = table[i]["Max Humidity"]
+			humidity += humid.to_i
+		end
+		avg_max = avg_max/(table.length-2)
+		avg_min = avg_min/(table.length-2)
+		humidity = humidity/(table.length-2)
+	end
+	puts "Highest Average: #{avg_max}C"
+
+	puts "Lowest Average: #{avg_min}C"
+
+	puts "Average Humidity: #{humidity}\%"
+
 end
 
 def third (date, path)
-	puts "-c was called"
+	# puts "-c was called"
+	temp_max = 0
+	temp_min = 0
+	year = date.split('/')[0]
+	month = date.split('/')[1].to_i
+
+	date = year + "_#{$months[month-1][..2]}"
+
+	puts "#{$months[month-1]} #{year}"
+	files = Dir["#{path}/*#{date}*.txt"]
+	
+	files.each do |file|
+		table = CSV.parse(File.read(file)[2..], headers: true)
+
+		for i in 0..table.length-2
+			temp = table[i]["Max TemperatureC"]
+			puts "#{i+1} " + ("+".red)*temp.to_i + "#{temp.to_i}C"
+
+			temp = table[i]["Min TemperatureC"]
+			puts "#{i+1} " + ("+".blue)*temp.to_i + "#{temp.to_i}C"
+
+		end
+	end
+
 end
 
 case ARGV[0]
